@@ -19,7 +19,7 @@ import static sample.cafekiosk.spring.domain.product.ProductType.HANDMADE;
  * @author sskim
  */
 @ActiveProfiles("test")
-@SpringBootTest
+@DataJpaTest
 class ProductRepositoryTest {
 
     @Autowired

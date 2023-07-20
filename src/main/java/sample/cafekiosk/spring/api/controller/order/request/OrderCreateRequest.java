@@ -2,6 +2,7 @@ package sample.cafekiosk.spring.api.controller.order.request;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -9,6 +10,7 @@ import java.util.List;
  * Created by sskim
  */
 @Getter
+@NoArgsConstructor
 public class OrderCreateRequest {
 
     private List<String> productNumbers;
