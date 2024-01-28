@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sample.cafekiosk.spring.domain.BaseEntity;
-import sample.cafekiosk.spring.domain.product.Product;
 import sample.cafekiosk.spring.domain.order.Order;
+import sample.cafekiosk.spring.domain.product.Product;
 
 import javax.persistence.*;
 
