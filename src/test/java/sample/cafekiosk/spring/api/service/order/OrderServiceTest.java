@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import sample.cafekiosk.spring.api.controller.order.request.OrderCreateRequest;
+import sample.cafekiosk.spring.api.service.order.request.OrderCreateServiceRequest;
 import sample.cafekiosk.spring.api.service.order.response.OrderResponse;
 import sample.cafekiosk.spring.domain.order.OrderRepository;
 import sample.cafekiosk.spring.domain.orderproduct.OrderProductRepository;
@@ -59,8 +59,7 @@ class OrderServiceTest {
 
     @DisplayName("주문번호 리스트를 받아 주문을 생성한다.")
     @Test
-    void createOrder() throws Exception {
-
+    void createOrder() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.now();
 
@@ -69,7 +68,7 @@ class OrderServiceTest {
         Product product3 = createProduct(HANDMADE, "003", 5000);
         productRepository.saveAll(List.of(product1, product2, product3));
 
-        OrderCreateRequest request = OrderCreateRequest.builder()
+        OrderCreateServiceRequest request = OrderCreateServiceRequest.builder()
                 .productNumbers(List.of("001", "002"))
                 .build();
 
@@ -87,13 +86,11 @@ class OrderServiceTest {
                         tuple("001", 1000),
                         tuple("002", 3000)
                 );
-
     }
-
 
     @DisplayName("중복되는 상품번호 리스트로 주문을 생성할 수 있다.")
     @Test
-    void createOrderWithDuplicateProductNumbers() throws Exception {
+    void createOrderWithDuplicateProductNumbers() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.now();
 
@@ -102,7 +99,7 @@ class OrderServiceTest {
         Product product3 = createProduct(HANDMADE, "003", 5000);
         productRepository.saveAll(List.of(product1, product2, product3));
 
-        OrderCreateRequest request = OrderCreateRequest.builder()
+        OrderCreateServiceRequest request = OrderCreateServiceRequest.builder()
                 .productNumbers(List.of("001", "001"))
                 .build();
 
@@ -120,13 +117,11 @@ class OrderServiceTest {
                         tuple("001", 1000),
                         tuple("001", 1000)
                 );
-
     }
 
     @DisplayName("재고와 관련된 상품이 포함되어 있는 주문번호 리스트를 받아 주문을 생성한다.")
     @Test
-    void createOrderWithStock() throws Exception {
-
+    void createOrderWithStock() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.now();
 
@@ -135,11 +130,11 @@ class OrderServiceTest {
         Product product3 = createProduct(HANDMADE, "003", 5000);
         productRepository.saveAll(List.of(product1, product2, product3));
 
-        Stock stock1 = Stock.create("001",2);
-        Stock stock2 = Stock.create("002",2);
+        Stock stock1 = Stock.create("001", 2);
+        Stock stock2 = Stock.create("002", 2);
         stockRepository.saveAll(List.of(stock1, stock2));
 
-        OrderCreateRequest request = OrderCreateRequest.builder()
+        OrderCreateServiceRequest request = OrderCreateServiceRequest.builder()
                 .productNumbers(List.of("001", "001", "002", "003"))
                 .build();
 
@@ -151,16 +146,16 @@ class OrderServiceTest {
         assertThat(orderResponse)
                 .extracting("registeredDateTime", "totalPrice")
                 .contains(registeredDateTime, 10000);
-        assertThat(orderResponse.getProducts()).hasSize(2)
+        assertThat(orderResponse.getProducts()).hasSize(4)
                 .extracting("productNumber", "price")
                 .containsExactlyInAnyOrder(
                         tuple("001", 1000),
-                        tuple("002", 1000),
+                        tuple("001", 1000),
                         tuple("002", 3000),
                         tuple("003", 5000)
                 );
 
-        final List<Stock> stocks = stockRepository.findAll();
+        List<Stock> stocks = stockRepository.findAll();
         assertThat(stocks).hasSize(2)
                 .extracting("productNumber", "quantity")
                 .containsExactlyInAnyOrder(
@@ -171,8 +166,7 @@ class OrderServiceTest {
 
     @DisplayName("재고가 부족한 상품으로 주문을 생성하려는 경우 예외가 발생한다.")
     @Test
-    void createOrderWithNoStock() throws Exception {
-
+    void createOrderWithNoStock() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.now();
 
@@ -182,19 +176,20 @@ class OrderServiceTest {
         productRepository.saveAll(List.of(product1, product2, product3));
 
         Stock stock1 = Stock.create("001", 2);
-        Stock stock2 = Stock.create("002",2);
-        stock1.deductQuantity(1);   // todo 이렇게 작성하면 안된다. 추가 설명 예정
+        Stock stock2 = Stock.create("002", 2);
+        stock1.deductQuantity(1); // todo
         stockRepository.saveAll(List.of(stock1, stock2));
 
-        OrderCreateRequest request = OrderCreateRequest.builder()
+        OrderCreateServiceRequest request = OrderCreateServiceRequest.builder()
                 .productNumbers(List.of("001", "001", "002", "003"))
                 .build();
 
-        // when //then
+        // when // then
         assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("재고가 부족한 상품이 있습니다.");
     }
+
 
     private Product createProduct(ProductType type, String productNumber, int price) {
         return Product.builder()
